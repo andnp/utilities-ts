@@ -8,14 +8,14 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
 
     static Zeros(dim: Dim) {
         return new Matrix(Float32Array, dim).fill(0);
-    };
+    }
 
     static fromMatrix(m: Matrix<any>) {
         const dims = m.dims();
         const Buffer = m.Buffer;
 
         return new Matrix(Buffer, dims).fill((i, j) => m.get(i, j));
-    };
+    }
 
     static fromBuffer<B extends Buffer>(buffer: B, dim: Dim) {
         if (buffer instanceof Float32Array) {
@@ -36,7 +36,7 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
     constructor(private Buffer: B, private dim: Dim, buffer?: InstanceType<B>) {
         if (buffer && buffer.length !== dim.cols * dim.rows) throw new Error(`Expected provided data to match provided dimensions. Expected <${dim.rows * dim.cols}>, got <${buffer.length}>`);
         this.data = buffer || new Buffer(dim.cols * dim.rows);
-    };
+    }
 
     inBounds(a: number, b: number) {
         const { rows, cols } = this.dims();
@@ -44,13 +44,13 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
                 b >= 0 &&
                 a < rows &&
                 b < cols;
-    };
+    }
 
     private boundaryCheck(a: number, b: number) {
         const { rows, cols } = this.dims();
         if (!this.inBounds(a, b))
             throw new Error(`Out-of-bounds: (${a}, ${b}) is out of bounds for (${rows}, ${cols}) matrix`);
-    };
+    }
 
     private merge(m: Matrix<B>) {
         this.transposed = m.transposed;
@@ -67,20 +67,20 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
         this.boundaryCheck(a, b);
         if (this.transposed) return this.data[b * this.rows + a];
         return this.data[a * this.cols + b];
-    };
+    }
 
     set(a: number, b: number, v: number) {
         this.boundaryCheck(a, b);
         if (this.transposed) this.data[b * this.rows + a] = v;
         else this.data[a * this.cols + b] = v;
         return this;
-    };
+    }
 
     load(data: InstanceType<B>) {
         if (data.length !== this.cols * this.rows) throw new Error(`Loaded data invalid length. got: <${data.length}>, expected: <${this.cols * this.rows}>`);
         this.data = data;
         return this;
-    };
+    }
 
     fill(f: ((i: number, j: number) => number) | number) {
         const g = typeof f === 'function' ? f : () => f;
@@ -101,27 +101,27 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
             rows: this.transposed ? dim2 : dim1,
             cols: this.transposed ? dim1 : dim2
         };
-    };
+    }
 
     transpose() {
         this.transposed = !this.transposed;
-    };
+    }
 
-    addRow(data: Array<number>) {
+    addRow(data: number[]) {
         const { cols } = this.dims();
         if (data.length !== cols) throw new Error(`Row of length: ${data.length} does not match matrix cols: ${cols}`);
 
         const m = new Matrix(this.Buffer, { rows: this.rows + 1, cols: this.cols });
-        m.transposed = this.transposed
+        m.transposed = this.transposed;
         m.fill((i, j) => {
             if (this.inBounds(i, j)) return this.get(i, j);
             return data[j];
         });
 
         this.merge(m);
-    };
+    }
 
-    addCol(data: Array<number>) {
+    addCol(data: number[]) {
         const { rows } = this.dims();
         if (data.length !== rows) throw new Error(`Col of length: ${data.length} does not match matrix rows: ${rows}`);
 
@@ -133,7 +133,7 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
         });
 
         this.merge(m);
-    };
+    }
 
     getRow(i: number) {
         this.boundaryCheck(i, 0);
@@ -142,7 +142,7 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
             row.push(this.get(i, j));
         }
         return row;
-    };
+    }
 
     getCol(i: number) {
         this.boundaryCheck(0, i);
@@ -151,7 +151,7 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
             ret.push(this.get(j, i));
         }
         return ret;
-    };
+    }
 
     asArrays() {
         const ret: number[][] = [];
@@ -172,7 +172,7 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
         });
 
         this.merge(m);
-    };
+    }
 
     print(digits = 3) {
         for (let i = 0; i < this.rows; ++i) {
