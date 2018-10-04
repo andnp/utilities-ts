@@ -17,6 +17,6 @@ export const csv = _csv;
 export const dates = _dates;
 export const files = _files;
 export const fp = _fp;
-export const object = _objects;
+export const objects = _objects;
 export const promise = _promise;
 export const time = _time;
