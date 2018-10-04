@@ -4,8 +4,8 @@ export type Dim = {rows: number, cols: number};
 export type BufferConstructor = Uint8ArrayConstructor | Float32ArrayConstructor | Int32ArrayConstructor;
 
 export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
-    private data: BufferType;
-    private transposed: boolean = false;
+    protected data: BufferType;
+    protected transposed: boolean = false;
 
     static Zeros(dim: Dim) {
         return new Matrix(Float32Array, dim).fill(0);
@@ -47,13 +47,13 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
                 b < cols;
     }
 
-    private boundaryCheck(a: number, b: number) {
+    protected boundaryCheck(a: number, b: number) {
         const { rows, cols } = this.dims();
         if (!this.inBounds(a, b))
             throw new Error(`Out-of-bounds: (${a}, ${b}) is out of bounds for (${rows}, ${cols}) matrix`);
     }
 
-    private merge(m: Matrix<B>) {
+    protected merge(m: Matrix<B>) {
         this.transposed = m.transposed;
         this.data = m.data;
         this.dim = m.dim;
