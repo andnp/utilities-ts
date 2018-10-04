@@ -5,7 +5,7 @@ function tuple(t1, t2) {
 }
 exports.tuple = tuple;
 function assertNever(t, msg = 'Unexpected `assertNever` branch reached') {
-    throw new Error(msg);
+    return new Error(msg);
 }
 exports.assertNever = assertNever;
 /**
