@@ -1,4 +1,4 @@
-import Matrix from 'Matrix';
+import { Matrix } from 'Matrix';
 
 const buildSimpleMatrix = () => Matrix.fromData([
     [1, 2, 3],
