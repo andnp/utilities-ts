@@ -1,6 +1,7 @@
+import { BufferType } from "./buffers";
+
 export type Dim = {rows: number, cols: number};
 export type BufferConstructor = Uint8ArrayConstructor | Float32ArrayConstructor | Int32ArrayConstructor;
-export type BufferType = Uint8Array | Float32Array | Int32Array;
 
 export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
     private data: BufferType;

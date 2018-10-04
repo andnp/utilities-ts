@@ -12,13 +12,11 @@ class Matrix {
     static Zeros(dim) {
         return new Matrix(Float32Array, dim).fill(0);
     }
-    ;
     static fromMatrix(m) {
         const dims = m.dims();
         const Buffer = m.Buffer;
         return new Matrix(Buffer, dims).fill((i, j) => m.get(i, j));
     }
-    ;
     static fromBuffer(buffer, dim) {
         if (buffer instanceof Float32Array) {
             return new Matrix(Float32Array, dim).load(buffer);
@@ -35,7 +33,6 @@ class Matrix {
         const Buffer = Buf || Float32Array;
         return new Matrix(Buffer, dims).fill((i, j) => data[i][j]);
     }
-    ;
     inBounds(a, b) {
         const { rows, cols } = this.dims();
         return a >= 0 &&
@@ -43,13 +40,11 @@ class Matrix {
             a < rows &&
             b < cols;
     }
-    ;
     boundaryCheck(a, b) {
         const { rows, cols } = this.dims();
         if (!this.inBounds(a, b))
             throw new Error(`Out-of-bounds: (${a}, ${b}) is out of bounds for (${rows}, ${cols}) matrix`);
     }
-    ;
     merge(m) {
         this.transposed = m.transposed;
         this.data = m.data;
@@ -65,7 +60,6 @@ class Matrix {
             return this.data[b * this.rows + a];
         return this.data[a * this.cols + b];
     }
-    ;
     set(a, b, v) {
         this.boundaryCheck(a, b);
         if (this.transposed)
@@ -74,14 +68,12 @@ class Matrix {
             this.data[a * this.cols + b] = v;
         return this;
     }
-    ;
     load(data) {
         if (data.length !== this.cols * this.rows)
             throw new Error(`Loaded data invalid length. got: <${data.length}>, expected: <${this.cols * this.rows}>`);
         this.data = data;
         return this;
     }
-    ;
     fill(f) {
         const g = typeof f === 'function' ? f : () => f;
         for (let i = 0; i < this.rows; ++i) {
@@ -99,11 +91,9 @@ class Matrix {
             cols: this.transposed ? dim1 : dim2
         };
     }
-    ;
     transpose() {
         this.transposed = !this.transposed;
     }
-    ;
     addRow(data) {
         const { cols } = this.dims();
         if (data.length !== cols)
@@ -117,7 +107,6 @@ class Matrix {
         });
         this.merge(m);
     }
-    ;
     addCol(data) {
         const { rows } = this.dims();
         if (data.length !== rows)
@@ -131,7 +120,6 @@ class Matrix {
         });
         this.merge(m);
     }
-    ;
     getRow(i) {
         this.boundaryCheck(i, 0);
         const row = [];
@@ -140,7 +128,6 @@ class Matrix {
         }
         return row;
     }
-    ;
     getCol(i) {
         this.boundaryCheck(0, i);
         const ret = [];
@@ -149,7 +136,6 @@ class Matrix {
         }
         return ret;
     }
-    ;
     asArrays() {
         const ret = [];
         for (let i = 0; i < this.rows; ++i) {
@@ -168,7 +154,6 @@ class Matrix {
         });
         this.merge(m);
     }
-    ;
     print(digits = 3) {
         for (let i = 0; i < this.rows; ++i) {
             for (let j = 0; j < this.cols; ++j) {
