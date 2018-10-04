@@ -29,4 +29,5 @@ exports.leaveOut = (arr, idx) => {
     });
     return r;
 };
+exports.filterUndefined = (x) => x.filter(d => d !== undefined);
 //# sourceMappingURL=arrays.js.map

@@ -27,3 +27,5 @@ export const leaveOut = <T>(arr: T[], idx: number): T[] => {
 
     return r;
 };
+
+export const filterUndefined = <T>(x: Array<T | undefined>): T[] => x.filter(d => d !== undefined) as any;
