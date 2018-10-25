@@ -18,13 +18,13 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
         return new Matrix(Buffer, dims).fill((i, j) => m.get(i, j));
     }
 
-    static fromBuffer<B extends Buffer>(buffer: B, dim: Dim) {
+    static fromBuffer<B extends BufferType>(buffer: B, dim: Dim) {
         if (buffer instanceof Float32Array) {
             return new Matrix(Float32Array, dim).load(buffer);
         } else if (buffer instanceof Int32Array) {
             return new Matrix(Int32Array, dim).load(buffer);
         } else {
-            return new Matrix(Uint8Array, dim).load(buffer);
+            return new Matrix(Uint8Array, dim).load(buffer as Uint8Array);
         }
     }
 
