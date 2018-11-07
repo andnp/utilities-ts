@@ -49,7 +49,10 @@ class CSVParser {
             }
             const arr = line.split(',').map(x => parseFloat(x));
             arr.forEach(d => this.setter(this.rows, this.i++, d));
-            this.rows++;
+            // only count rows that have data.
+            // skip blank rows (for instance the last row in a \n terminated file)
+            if (arr.length)
+                this.rows++;
         };
         this.o = _.merge({
             skipFirst: false,
