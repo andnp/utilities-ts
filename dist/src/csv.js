@@ -12,6 +12,7 @@ const _ = require("lodash");
 const fs = require("fs");
 const stream_1 = require("stream");
 const files_1 = require("./files");
+const Matrix_1 = require("./Matrix");
 class LineCollector extends stream_1.Writable {
     constructor() {
         super(...arguments);
@@ -36,17 +37,19 @@ class LineCollector extends stream_1.Writable {
     }
 }
 class CSVParser {
-    constructor(buffer, opts) {
-        this.buffer = buffer;
+    constructor(setter, opts) {
+        this.setter = setter;
         this.skippedFirst = false;
         this.i = 0;
+        this.rows = 0;
         this.listen = (line) => {
             if (this.o.skipFirst && !this.skippedFirst) {
                 this.skippedFirst = true;
                 return;
             }
             const arr = line.split(',').map(x => parseFloat(x));
-            arr.forEach(d => this.buffer[this.i++] = d);
+            arr.forEach(d => this.setter(this.rows, this.i++, d));
+            this.rows++;
         };
         this.o = _.merge({
             skipFirst: false,
@@ -55,7 +58,8 @@ class CSVParser {
 }
 function loadCsvToBuffer(params) {
     const { path, buffer } = params;
-    const parser = new CSVParser(buffer);
+    let i = 0;
+    const parser = new CSVParser((__, ___, d) => buffer[i++] = d);
     const stream = fs.createReadStream(path)
         .pipe(new LineCollector());
     return new Promise((resolve, reject) => {
@@ -65,6 +69,23 @@ function loadCsvToBuffer(params) {
     });
 }
 exports.loadCsvToBuffer = loadCsvToBuffer;
+function load(path) {
+    const data = [];
+    const parser = new CSVParser((i, j, d) => {
+        if (i === data.length) {
+            data.push([]);
+        }
+        data[i].push(d);
+    });
+    const stream = fs.createReadStream(path)
+        .pipe(new LineCollector());
+    return new Promise((resolve, reject) => {
+        stream.on('error', reject);
+        stream.on('finish', () => resolve(Matrix_1.Matrix.fromData(data)));
+        stream.on('data', parser.listen);
+    });
+}
+exports.load = load;
 function writeCsv(path, m) {
     return __awaiter(this, void 0, void 0, function* () {
         yield files_1.createFolder(path);

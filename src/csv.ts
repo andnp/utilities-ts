@@ -5,6 +5,7 @@ import { PlainObject } from 'simplytyped';
 
 import { createFolder } from './files';
 import { BufferType } from './buffers';
+import { Matrix } from './Matrix';
 
 class LineCollector extends Writable {
     private buf = '';
@@ -33,13 +34,15 @@ interface CSVParserOptions {
     skipFirst: boolean;
 }
 
-class CSVParser<B extends BufferType> {
+class CSVParser {
     protected o: CSVParserOptions;
     private skippedFirst = false;
     private i = 0;
 
+    rows: number = 0;
+
     constructor(
-        private buffer: B,
+        private setter: (i: number, j: number, v: number) => void,
         opts?: Partial<CSVParserOptions>,
     ) {
         this.o = _.merge({
@@ -54,7 +57,9 @@ class CSVParser<B extends BufferType> {
         }
 
         const arr = line.split(',').map(x => parseFloat(x));
-        arr.forEach(d => this.buffer[this.i++] = d);
+        arr.forEach(d => this.setter(this.rows, this.i++, d));
+
+        this.rows++;
     }
 }
 
@@ -65,7 +70,8 @@ interface LoadCsvParams<B extends BufferType> {
 export function loadCsvToBuffer<B extends BufferType>(params: LoadCsvParams<B>): Promise<B> {
     const { path, buffer } = params;
 
-    const parser = new CSVParser(buffer);
+    let i = 0;
+    const parser = new CSVParser((__, ___, d) => buffer[i++] = d);
 
     const stream = fs.createReadStream(path)
         .pipe(new LineCollector());
@@ -73,6 +79,27 @@ export function loadCsvToBuffer<B extends BufferType>(params: LoadCsvParams<B>):
     return new Promise<B>((resolve, reject) => {
         stream.on('error', reject);
         stream.on('finish', () => resolve(buffer));
+        stream.on('data', parser.listen);
+    });
+}
+
+export function load(path: string): Promise<Matrix> {
+    const data = [] as number[][];
+
+    const parser = new CSVParser((i, j, d) => {
+        if (i === data.length) {
+            data.push([]);
+        }
+
+        data[i].push(d);
+    });
+
+    const stream = fs.createReadStream(path)
+        .pipe(new LineCollector());
+
+    return new Promise<Matrix>((resolve, reject) => {
+        stream.on('error', reject);
+        stream.on('finish', () => resolve(Matrix.fromData(data)));
         stream.on('data', parser.listen);
     });
 }

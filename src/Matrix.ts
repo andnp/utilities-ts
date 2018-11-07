@@ -34,6 +34,12 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
         return new Matrix(Buffer, dims).fill((i, j) => data[i][j]);
     }
 
+    static fromFlatData<B extends BufferConstructor = Float32ArrayConstructor>(data: number[], dim: Dim, Buf?: B) {
+        const Buffer = Buf || Float32Array;
+        const b = new Buffer(data);
+        return Matrix.fromBuffer(b, dim);
+    }
+
     constructor(private Buffer: B, private dim: Dim, buffer?: InstanceType<B>) {
         if (buffer && buffer.length !== dim.cols * dim.rows) throw new Error(`Expected provided data to match provided dimensions. Expected <${dim.rows * dim.cols}>, got <${buffer.length}>`);
         this.data = buffer || new Buffer(dim.cols * dim.rows);

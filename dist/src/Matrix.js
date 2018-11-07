@@ -33,6 +33,11 @@ class Matrix {
         const Buffer = Buf || Float32Array;
         return new Matrix(Buffer, dims).fill((i, j) => data[i][j]);
     }
+    static fromFlatData(data, dim, Buf) {
+        const Buffer = Buf || Float32Array;
+        const b = new Buffer(data);
+        return Matrix.fromBuffer(b, dim);
+    }
     inBounds(a, b) {
         const { rows, cols } = this.dims();
         return a >= 0 &&
