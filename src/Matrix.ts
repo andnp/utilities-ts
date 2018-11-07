@@ -40,6 +40,26 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
         return Matrix.fromBuffer(b, dim);
     }
 
+    static concat<B extends BufferConstructor = Float32ArrayConstructor>(data: Array<Matrix<B>>, axis = 0) {
+        const dim = axis === 0 ? { rows: 0, cols: data[0].cols } : { rows: data[0].rows, cols: 0 };
+        const out = new Matrix(data[0].Buffer, dim);
+        for (const m of data) {
+            const dim = axis === 0 ? m.rows : m.cols;
+
+            for (let i = 0; i < dim; i++) {
+                if (axis === 0) {
+                    const r = m.getRow(i);
+                    out.addRow(r);
+                } else {
+                    const c = m.getCol(i);
+                    out.addCol(c);
+                }
+            }
+        }
+
+        return out;
+    }
+
     constructor(private Buffer: B, private dim: Dim, buffer?: InstanceType<B>) {
         if (buffer && buffer.length !== dim.cols * dim.rows) throw new Error(`Expected provided data to match provided dimensions. Expected <${dim.rows * dim.cols}>, got <${buffer.length}>`);
         this.data = buffer || new Buffer(dim.cols * dim.rows);

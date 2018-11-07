@@ -163,3 +163,24 @@ test("Can build a matrix of zeros", () => {
         [0, 0]
     ]).equal(m)).toBe(true);
 });
+
+test('Can concat multiple matrix rows', () => {
+    const m = Matrix.fromData([
+        [1, 2, 3],
+        [4, 5, 6],
+    ]);
+
+    const n = Matrix.fromData([
+        [7, 8, 9],
+    ]);
+
+    const e = Matrix.fromData([
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+    ]);
+
+    const got = Matrix.concat([m, n], 0);
+
+    expect(got.equal(e)).toBe(true);
+});

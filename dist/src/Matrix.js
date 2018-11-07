@@ -38,6 +38,24 @@ class Matrix {
         const b = new Buffer(data);
         return Matrix.fromBuffer(b, dim);
     }
+    static concat(data, axis = 0) {
+        const dim = axis === 0 ? { rows: 0, cols: data[0].cols } : { rows: data[0].rows, cols: 0 };
+        const out = new Matrix(data[0].Buffer, dim);
+        for (const m of data) {
+            const dim = axis === 0 ? m.rows : m.cols;
+            for (let i = 0; i < dim; i++) {
+                if (axis === 0) {
+                    const r = m.getRow(i);
+                    out.addRow(r);
+                }
+                else {
+                    const c = m.getCol(i);
+                    out.addCol(c);
+                }
+            }
+        }
+        return out;
+    }
     inBounds(a, b) {
         const { rows, cols } = this.dims();
         return a >= 0 &&
