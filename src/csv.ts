@@ -56,7 +56,8 @@ class CSVParser {
             return;
         }
 
-        const arr = line.split(',').map(x => parseFloat(x));
+        const strings = line ===  '' ? [] : line.split(',');
+        const arr = strings.map(x => parseFloat(x));
         arr.forEach(d => this.setter(this.rows, this.i++, d));
 
         // only count rows that have data.
