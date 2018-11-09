@@ -29,7 +29,12 @@ const mkdir = util_1.promisify(mkdirp);
  * to a system specific file path. On Unix based systems
  * maintains the ("/") and on Windows systems uses ("\")
  */
-exports.filePath = (location) => path.join(...location.split('/'));
+exports.filePath = (location) => {
+    const joint = path.join(...location.split('/'));
+    if (location.startsWith('/'))
+        return '/' + joint;
+    return joint;
+};
 /**
  * Creates folders for the entire given path if necessary.
  * Same behaviour as mkdir -p

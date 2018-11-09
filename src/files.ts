@@ -23,7 +23,11 @@ const mkdir = promisify(mkdirp);
  * to a system specific file path. On Unix based systems
  * maintains the ("/") and on Windows systems uses ("\")
  */
-export const filePath = (location: string) => path.join(...location.split('/'));
+export const filePath = (location: string) => {
+    const joint = path.join(...location.split('/'));
+    if (location.startsWith('/')) return '/' + joint;
+    return joint;
+};
 
 /**
  * Creates folders for the entire given path if necessary.
