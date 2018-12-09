@@ -29,3 +29,13 @@ export const leaveOut = <T>(arr: T[], idx: number): T[] => {
 };
 
 export const filterUndefined = <T>(x: Array<T | undefined>): T[] => x.filter(d => d !== undefined) as any;
+
+export const range = (_minMax: number, _max?: number) => {
+    const min = _max ? _minMax : 0;
+    const max = _max ? _max : _minMax;
+
+    const ret: number[] = [];
+    for (let i = min; i < max; ++i) ret.push(i);
+
+    return ret;
+};

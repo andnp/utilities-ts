@@ -30,4 +30,12 @@ exports.leaveOut = (arr, idx) => {
     return r;
 };
 exports.filterUndefined = (x) => x.filter(d => d !== undefined);
+exports.range = (_minMax, _max) => {
+    const min = _max ? _minMax : 0;
+    const max = _max ? _max : _minMax;
+    const ret = [];
+    for (let i = min; i < max; ++i)
+        ret.push(i);
+    return ret;
+};
 //# sourceMappingURL=arrays.js.map
