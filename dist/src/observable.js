@@ -99,6 +99,9 @@ class Observable {
         this.bindEndAndError(obs);
         return obs;
     }
+    filterUndefined() {
+        return this.filter(d => typeof d !== 'undefined');
+    }
     // ---------
     // Data Flow
     // ---------

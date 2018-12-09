@@ -101,6 +101,17 @@ test('Can filter over promise returning functions', async () => {
     expect(state).toBe(2);
 });
 
+test('Can filter undefined values from the stream', async () => {
+    let state = 1;
+
+    await Observable.fromArray([0, undefined, 1, 2, undefined, 3])
+        .filterUndefined()
+        .map(i => i + 1)
+        .subscribe(data => expect(data).toBe(state++));
+
+    expect(state).toBe(5);
+});
+
 // ----------
 // Aggregates
 // ----------

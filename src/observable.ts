@@ -121,6 +121,10 @@ export class Observable<T> {
         return obs;
     }
 
+    filterUndefined() {
+        return this.filter(d => typeof d !== 'undefined') as any as Observable<Exclude<T, undefined>>;
+    }
+
     // ---------
     // Data Flow
     // ---------
