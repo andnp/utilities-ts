@@ -4,7 +4,9 @@ import * as path from 'path';
 import * as v from 'validtyped';
 import * as rmrf from 'rimraf';
 import * as globAsync from 'glob';
+import { Glob } from 'glob';
 import { promisify } from 'util';
+import { Observable } from './observable';
 
 // --------------------------
 // Promisified File Utilities
@@ -17,6 +19,28 @@ export const removeRecursively = promisify(rmrf);
 export const glob = promisify(globAsync);
 
 const mkdir = promisify(mkdirp);
+
+// ---------------------
+// Observable File Utils
+// ---------------------
+export const globObservable = (loc: string): Observable<string> => {
+    const glober = new Glob(loc);
+
+    return Observable.fromEvent<string>(glober, {
+        data: 'match',
+        error: 'error',
+        end: 'end',
+    });
+};
+
+export const readdirObservable = (loc: string): Observable<string> => {
+    return Observable.create<string>(creator => {
+        readdir(loc).then(files => {
+            files.forEach(d => creator.next(d));
+            creator.end();
+        }).catch(e => creator.error(e));
+    });
+};
 
 /**
  * Converts a string containing forward slashes ("/")

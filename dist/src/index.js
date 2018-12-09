@@ -5,6 +5,7 @@ function __export(m) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __export(require("./Matrix"));
 __export(require("./tsUtil"));
+__export(require("./observable"));
 const _arrays = require("./arrays");
 const _buffers = require("./buffers");
 const _csv = require("./csv");

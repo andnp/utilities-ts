@@ -1,5 +1,6 @@
 export * from './Matrix';
 export * from './tsUtil';
+export * from './observable';
 
 import * as _arrays from './arrays';
 import * as _buffers from './buffers';

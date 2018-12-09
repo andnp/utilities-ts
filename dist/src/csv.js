@@ -13,6 +13,7 @@ const fs = require("fs");
 const stream_1 = require("stream");
 const files_1 = require("./files");
 const Matrix_1 = require("./Matrix");
+const observable_1 = require("./observable");
 class LineCollector extends stream_1.Writable {
     constructor() {
         super(...arguments);
@@ -40,7 +41,6 @@ class CSVParser {
     constructor(setter, opts) {
         this.setter = setter;
         this.skippedFirst = false;
-        this.i = 0;
         this.rows = 0;
         this.listen = (line) => {
             if (this.o.skipFirst && !this.skippedFirst) {
@@ -49,7 +49,7 @@ class CSVParser {
             }
             const strings = line === '' ? [] : line.split(',');
             const arr = strings.map(x => parseFloat(x));
-            arr.forEach(d => this.setter(this.rows, this.i++, d));
+            this.setter(this.rows, arr);
             // only count rows that have data.
             // skip blank rows (for instance the last row in a \n terminated file)
             if (arr.length)
@@ -63,7 +63,7 @@ class CSVParser {
 function loadCsvToBuffer(params) {
     const { path, buffer } = params;
     let i = 0;
-    const parser = new CSVParser((__, ___, d) => buffer[i++] = d);
+    const parser = new CSVParser((__, d) => d.forEach(p => buffer[i++] = p));
     const stream = fs.createReadStream(path)
         .pipe(new LineCollector());
     return new Promise((resolve, reject) => {
@@ -73,13 +73,21 @@ function loadCsvToBuffer(params) {
     });
 }
 exports.loadCsvToBuffer = loadCsvToBuffer;
+function loadToObservable(path) {
+    return observable_1.Observable.create(creator => {
+        const parser = new CSVParser((i, data) => creator.next(data));
+        const stream = fs.createReadStream(path)
+            .pipe(new LineCollector());
+        stream.on('error', e => creator.error(e));
+        stream.on('finish', () => creator.end());
+        stream.on('data', parser.listen);
+    });
+}
+exports.loadToObservable = loadToObservable;
 function load(path) {
     const data = [];
-    const parser = new CSVParser((i, j, d) => {
-        if (i === data.length) {
-            data.push([]);
-        }
-        data[i].push(d);
+    const parser = new CSVParser((i, d) => {
+        data.push(d);
     });
     const stream = fs.createReadStream(path)
         .pipe(new LineCollector());

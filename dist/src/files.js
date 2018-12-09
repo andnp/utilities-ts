@@ -13,7 +13,9 @@ const mkdirp = require("mkdirp");
 const path = require("path");
 const rmrf = require("rimraf");
 const globAsync = require("glob");
+const glob_1 = require("glob");
 const util_1 = require("util");
+const observable_1 = require("./observable");
 // --------------------------
 // Promisified File Utilities
 // --------------------------
@@ -24,6 +26,25 @@ exports.readdir = util_1.promisify(fs.readdir);
 exports.removeRecursively = util_1.promisify(rmrf);
 exports.glob = util_1.promisify(globAsync);
 const mkdir = util_1.promisify(mkdirp);
+// ---------------------
+// Observable File Utils
+// ---------------------
+exports.globObservable = (loc) => {
+    const glober = new glob_1.Glob(loc);
+    return observable_1.Observable.fromEvent(glober, {
+        data: 'match',
+        error: 'error',
+        end: 'end',
+    });
+};
+exports.readdirObservable = (loc) => {
+    return observable_1.Observable.create(creator => {
+        exports.readdir(loc).then(files => {
+            files.forEach(d => creator.next(d));
+            creator.end();
+        }).catch(e => creator.error(e));
+    });
+};
 /**
  * Converts a string containing forward slashes ("/")
  * to a system specific file path. On Unix based systems

@@ -6,6 +6,7 @@ import { PlainObject } from 'simplytyped';
 import { createFolder } from './files';
 import { BufferType } from './buffers';
 import { Matrix } from './Matrix';
+import { Observable } from './observable';
 
 class LineCollector extends Writable {
     private buf = '';
@@ -37,12 +38,11 @@ interface CSVParserOptions {
 class CSVParser {
     protected o: CSVParserOptions;
     private skippedFirst = false;
-    private i = 0;
 
     rows: number = 0;
 
     constructor(
-        private setter: (i: number, j: number, v: number) => void,
+        private setter: (i: number, v: number[]) => void,
         opts?: Partial<CSVParserOptions>,
     ) {
         this.o = _.merge({
@@ -58,7 +58,7 @@ class CSVParser {
 
         const strings = line ===  '' ? [] : line.split(',');
         const arr = strings.map(x => parseFloat(x));
-        arr.forEach(d => this.setter(this.rows, this.i++, d));
+        this.setter(this.rows, arr);
 
         // only count rows that have data.
         // skip blank rows (for instance the last row in a \n terminated file)
@@ -74,7 +74,7 @@ export function loadCsvToBuffer<B extends BufferType>(params: LoadCsvParams<B>):
     const { path, buffer } = params;
 
     let i = 0;
-    const parser = new CSVParser((__, ___, d) => buffer[i++] = d);
+    const parser = new CSVParser((__, d) => d.forEach(p => buffer[i++] = p));
 
     const stream = fs.createReadStream(path)
         .pipe(new LineCollector());
@@ -86,15 +86,23 @@ export function loadCsvToBuffer<B extends BufferType>(params: LoadCsvParams<B>):
     });
 }
 
+export function loadToObservable(path: string): Observable<number[]> {
+    return Observable.create<number[]>(creator => {
+        const parser = new CSVParser((i, data) => creator.next(data));
+        const stream = fs.createReadStream(path)
+            .pipe(new LineCollector());
+
+        stream.on('error', e => creator.error(e));
+        stream.on('finish', () => creator.end());
+        stream.on('data', parser.listen);
+    });
+}
+
 export function load(path: string): Promise<Matrix> {
     const data = [] as number[][];
 
-    const parser = new CSVParser((i, j, d) => {
-        if (i === data.length) {
-            data.push([]);
-        }
-
-        data[i].push(d);
+    const parser = new CSVParser((i, d) => {
+        data.push(d);
     });
 
     const stream = fs.createReadStream(path)
