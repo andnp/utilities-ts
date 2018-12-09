@@ -26,11 +26,14 @@ const mkdir = promisify(mkdirp);
 export const globObservable = (loc: string): Observable<string> => {
     const glober = new Glob(loc);
 
-    return Observable.fromEvent<string>(glober, {
+    const obs = Observable.fromEvent<string>(glober, {
         data: 'match',
         error: 'error',
         end: 'end',
     });
+
+    obs.onEnd(() => glober.abort());
+    return obs;
 };
 
 export const readdirObservable = (loc: string): Observable<string> => {

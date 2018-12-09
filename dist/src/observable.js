@@ -225,6 +225,19 @@ class Observable {
         });
         return joint;
     }
+    take(num) {
+        const obs = new Observable();
+        let i = 0;
+        this.subscribe(d => {
+            if (i >= num)
+                this.end();
+            else
+                obs.next(d);
+            i++;
+        });
+        this.bindEndAndError(obs);
+        return obs;
+    }
     bottleneck(num) {
         this.parallel = num;
         return this;

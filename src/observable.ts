@@ -258,6 +258,21 @@ export class Observable<T> {
         return joint;
     }
 
+    take(num: number): Observable<T> {
+        const obs = new Observable<T>();
+
+        let i = 0;
+
+        this.subscribe(d => {
+            if (i >= num) this.end();
+            else obs.next(d);
+            i++;
+        });
+        this.bindEndAndError(obs);
+
+        return obs;
+    }
+
     bottleneck(num: number): Observable<T> {
         this.parallel = num;
         return this;

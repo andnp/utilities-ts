@@ -31,11 +31,13 @@ const mkdir = util_1.promisify(mkdirp);
 // ---------------------
 exports.globObservable = (loc) => {
     const glober = new glob_1.Glob(loc);
-    return observable_1.Observable.fromEvent(glober, {
+    const obs = observable_1.Observable.fromEvent(glober, {
         data: 'match',
         error: 'error',
         end: 'end',
     });
+    obs.onEnd(() => glober.abort());
+    return obs;
 };
 exports.readdirObservable = (loc) => {
     return observable_1.Observable.create(creator => {

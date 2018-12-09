@@ -11,3 +11,9 @@ test('Can read a directory into an observable', async () => {
 
     expect(dir).toContain('arrays.ts');
 });
+
+test('Can terminate observable glob early', async () => {
+    const files = await globObservable('src/*.ts').take(1).collect();
+
+    expect(files.length).toBe(1);
+});
