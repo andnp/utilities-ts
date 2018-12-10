@@ -89,6 +89,20 @@ class Observable {
         this.bindEndAndError(obs);
         return obs;
     }
+    flatMap(sub) {
+        const obs = new Observable();
+        this.subscribe((data) => __awaiter(this, void 0, void 0, function* () {
+            const r = sub(data);
+            if (r instanceof Observable)
+                return r.bind(obs);
+            if (Array.isArray(r))
+                return r.forEach(d => obs.next(d));
+            if (r instanceof Promise)
+                return obs.next(yield r);
+        }));
+        this.bindEndAndError(obs);
+        return obs;
+    }
     filter(test) {
         const obs = new Observable();
         this.subscribe((data) => __awaiter(this, void 0, void 0, function* () {
@@ -129,14 +143,11 @@ class Observable {
             this.dispose();
         });
     }
-    // -----
-    // Async
-    // -----
     then(f) {
         return __awaiter(this, void 0, void 0, function* () {
             // if this observable is already done, just return
             if (this.completed || this.err)
-                return f();
+                return f && f();
             // otherwise, return once the `end` or `error` function is called
             return new Promise((resolve, reject) => {
                 this.onEnd(resolve);
@@ -251,6 +262,10 @@ class Observable {
     bindEndAndError(obs) {
         this.onEnd(() => obs.end());
         this.onError(e => obs.error(e));
+    }
+    bind(obs) {
+        this.bindEndAndError(obs);
+        this.subscribe(d => obs.next(d));
     }
     dispose() {
         if (!(this.completed || this.err))

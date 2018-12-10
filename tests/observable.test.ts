@@ -1,4 +1,4 @@
-import { promise, Observable } from 'index';
+import { promise, Observable, arrays } from 'index';
 import { Milliseconds } from 'time';
 import { giveBack } from 'fp';
 
@@ -110,6 +110,15 @@ test('Can filter undefined values from the stream', async () => {
         .subscribe(data => expect(data).toBe(state++));
 
     expect(state).toBe(5);
+});
+
+test('Can flatten arrays into stream', async () => {
+    const out = await Observable.fromArray([0, 1, 2, 3])
+        .flatMap(d => arrays.range(d))
+        .collect();
+
+    const expected = [0, 0, 1, 0, 1, 2];
+    expect(out).toEqual(expected);
 });
 
 // ----------

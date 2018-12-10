@@ -12,6 +12,7 @@ type OrPromise<T> = T | Promise<T>;
 export type ObservableCreatorFunction<T> = (obs: RawObservable<T>) => any;
 export type ObservableSubscriptionFunction<T> = (data: T) => any;
 export type ObservableMapFunction<T, R> = (data: T) => OrPromise<R>;
+export type ObservableFlatMapFunction<T, R> = (data: T) => R[] | Observable<R> | Promise<R>;
 
 export class Observable<T> {
     protected constructor() {}
@@ -109,6 +110,20 @@ export class Observable<T> {
         return obs;
     }
 
+    flatMap<R>(sub: ObservableFlatMapFunction<T, R>): Observable<R> {
+        const obs = new Observable<R>();
+
+        this.subscribe(async (data) => {
+            const r = sub(data);
+            if (r instanceof Observable) return r.bind(obs);
+            if (Array.isArray(r)) return r.forEach(d => obs.next(d));
+            if (r instanceof Promise) return obs.next(await r);
+        });
+        this.bindEndAndError(obs);
+
+        return obs;
+    }
+
     filter(test: (d: T) => OrPromise<boolean>): Observable<T> {
         const obs = new Observable<T>();
 
@@ -155,9 +170,11 @@ export class Observable<T> {
     // -----
     // Async
     // -----
-    async then<R>(f: () => R | Promise<R>): Promise<R> {
+    async then(): Promise<void>;
+    async then<R>(f: () => R | Promise<R>): Promise<R>;
+    async then<R>(f?: () => R | Promise<R>): Promise<R | void> {
         // if this observable is already done, just return
-        if (this.completed || this.err) return f();
+        if (this.completed || this.err) return f && f();
 
         // otherwise, return once the `end` or `error` function is called
         return new Promise((resolve, reject) => {
@@ -288,6 +305,11 @@ export class Observable<T> {
     protected bindEndAndError(obs: Observable<any>) {
         this.onEnd(() => obs.end());
         this.onError(e => obs.error(e));
+    }
+
+    protected bind(obs: Observable<T>) {
+        this.bindEndAndError(obs);
+        this.subscribe(d => obs.next(d));
     }
 
     dispose() {
