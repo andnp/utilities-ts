@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const _ = require("lodash");
 class Matrix {
     constructor(Buffer, dim, buffer) {
         this.Buffer = Buffer;
@@ -197,6 +198,48 @@ class Matrix {
         }
         return true;
     }
+    // ---------
+    // Utilities
+    // ---------
+    static describeColumns(m, options) {
+        const { cols } = m.dims();
+        return _.times(cols, (i) => {
+            const col = m.getCol(i);
+            return describe(col, options);
+        });
+    }
+    static describeRows(m, options) {
+        const { rows } = m.dims();
+        return _.times(rows, (i) => {
+            const row = m.getRow(i);
+            return describe(row, options);
+        });
+    }
 }
 exports.Matrix = Matrix;
+function standardError(arr) {
+    let n = 0;
+    let m = 0;
+    let m2 = 0;
+    arr.forEach((x) => {
+        n++;
+        const delta = x - m;
+        m += delta / n;
+        const d2 = x - m;
+        m2 += delta * d2;
+    });
+    const variance = m2 / (n - 1);
+    return Math.sqrt(variance) / Math.sqrt(arr.length);
+}
+function describe(arr, options) {
+    let recoded = arr;
+    if (options) {
+        recoded = options.ignoreNan ? arr.filter((k) => !_.isNaN(k)) : recoded;
+    }
+    return {
+        mean: _.mean(recoded),
+        stderr: standardError(recoded) || 0,
+        count: recoded.length
+    };
+}
 //# sourceMappingURL=Matrix.js.map

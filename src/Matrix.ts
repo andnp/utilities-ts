@@ -1,4 +1,5 @@
 import { BufferType } from "./buffers";
+import * as _ from 'lodash';
 
 export type Dim = {rows: number, cols: number};
 export type BufferConstructor = Uint8ArrayConstructor | Float32ArrayConstructor | Int32ArrayConstructor;
@@ -222,4 +223,60 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
 
         return true;
     }
+
+    // ---------
+    // Utilities
+    // ---------
+    static describeColumns(m: Matrix, options?: DescriptionOptions) {
+        const { cols } = m.dims();
+        return _.times<ArrayStats>(cols, (i) => {
+            const col = m.getCol(i);
+            return describe(col, options);
+        });
+    }
+
+    static describeRows(m: Matrix, options?: DescriptionOptions) {
+        const { rows } = m.dims();
+        return _.times<ArrayStats>(rows, (i) => {
+            const row = m.getRow(i);
+            return describe(row, options);
+        });
+    }
+}
+
+export interface ArrayStats {
+    mean: number;
+    stderr: number;
+    count: number;
+}
+
+export interface DescriptionOptions {
+    ignoreNan: boolean;
+}
+
+function standardError(arr: number[]) {
+    let n = 0;
+    let m = 0;
+    let m2 = 0;
+    arr.forEach((x) => {
+        n++;
+        const delta = x - m;
+        m += delta / n;
+        const d2 = x - m;
+        m2 += delta * d2;
+    });
+    const variance = m2 / (n - 1);
+    return Math.sqrt(variance) / Math.sqrt(arr.length);
+}
+
+function describe(arr: number[], options?: DescriptionOptions) {
+    let recoded = arr;
+    if (options) {
+        recoded = options.ignoreNan ? arr.filter((k) => !_.isNaN(k)) : recoded;
+    }
+    return {
+        mean: _.mean(recoded),
+        stderr: standardError(recoded) || 0,
+        count: recoded.length
+    };
 }
