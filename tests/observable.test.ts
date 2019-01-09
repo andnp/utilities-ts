@@ -61,7 +61,10 @@ test('Can concatenate two observables', async () => {
     const obs1 = Observable.fromArray([0, 1, 2]);
     const obs2 = Observable.fromArray([3, 4, 5]);
 
-    await obs1.concat(obs2).subscribe(data => expect(data).toBe(state++));
+    await obs1.concat(obs2).subscribe(data => {
+        state++;
+        expect([0, 1, 2, 3, 4, 5].includes(data)).toBe(true);
+    });
 
     expect(state).toBe(6);
 });

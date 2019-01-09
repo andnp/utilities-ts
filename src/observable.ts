@@ -59,8 +59,16 @@ export class Observable<T> {
 
     static fromArray<T>(arr: T[]): Observable<T> {
         const obs = Observable.create<T>(creator => {
-            arr.forEach(creator.next);
-            creator.end();
+            // use setTimeout to release the control loop after each item is processed
+            const send = (i: number) => {
+                if (i >= arr.length) return creator.end();
+
+                creator.next(arr[i]);
+
+                setTimeout(() => send(i + 1), 1);
+            };
+
+            send(0);
         });
 
         return obs;
