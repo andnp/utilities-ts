@@ -116,8 +116,8 @@ export class Observable<T> {
         this.subscribe(async (data) => {
             const r = sub(data);
             if (r instanceof Observable) return r.bind(obs);
-            if (Array.isArray(r)) return r.forEach(d => obs.next(d));
             if (r instanceof Promise) return obs.next(await r);
+            if (Array.isArray(r)) return sendArray(d => obs.queue.push(d), () => obs.execute(), r);
         });
         this.bindEndAndError(obs);
 
@@ -328,14 +328,15 @@ export class Observable<T> {
 
 const sendArray = <T>(next: (t: T) => void, end: () => void, arr: T[]) => {
     // use setTimeout to release the control loop after each item is processed
-    const send = (i: number) => {
-        if (i >= arr.length) return end();
+    const send = (i: number): Promise<void> => {
+        if (i >= arr.length) return Promise.resolve(end());
         next(arr[i]);
 
-        setTimeout(() => send(i + 1), 5);
+        return promise.delay(5 as Milliseconds)
+            .then(() => send(i + 1));
     };
 
-    send(0);
+    return send(0);
 };
 
 const uniqueId = () => {

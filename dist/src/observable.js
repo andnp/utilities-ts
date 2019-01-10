@@ -94,10 +94,10 @@ class Observable {
             const r = sub(data);
             if (r instanceof Observable)
                 return r.bind(obs);
-            if (Array.isArray(r))
-                return r.forEach(d => obs.next(d));
             if (r instanceof Promise)
                 return obs.next(yield r);
+            if (Array.isArray(r))
+                return sendArray(d => obs.queue.push(d), () => obs.execute(), r);
         }));
         this.bindEndAndError(obs);
         return obs;
@@ -284,11 +284,12 @@ const sendArray = (next, end, arr) => {
     // use setTimeout to release the control loop after each item is processed
     const send = (i) => {
         if (i >= arr.length)
-            return end();
+            return Promise.resolve(end());
         next(arr[i]);
-        setTimeout(() => send(i + 1), 5);
+        return promise.delay(5)
+            .then(() => send(i + 1));
     };
-    send(0);
+    return send(0);
 };
 const uniqueId = () => {
     let i = 0;
