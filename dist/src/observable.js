@@ -97,7 +97,7 @@ class Observable {
             if (r instanceof Promise)
                 return obs.next(yield r);
             if (Array.isArray(r))
-                return sendArray(d => obs.queue.push(d), () => obs.execute(), r);
+                return sendArray(d => obs.next(d), () => { }, r);
         }));
         this.bindEndAndError(obs);
         return obs;
@@ -156,8 +156,10 @@ class Observable {
     }
     execute() {
         return __awaiter(this, void 0, void 0, function* () {
-            const active = Object.keys(this.activeTasks).length;
             const remaining = this.queue.length;
+            if (remaining === 0)
+                return;
+            const active = Object.keys(this.activeTasks).length;
             const shouldExecute = this.parallel > 0 ? min(this.parallel - active, remaining) : remaining;
             for (let i = 0; i < shouldExecute; ++i) {
                 const id = this.getId();
@@ -170,14 +172,7 @@ class Observable {
                     setTimeout(() => this.execute(), 5);
                 });
             }
-            yield promise.allValues(this.activeTasks)
-                // ensure control loop clears before running again
-                .then(() => promise.delay(5))
-                .then(() => {
-                if (this.queue.length === 0)
-                    return;
-                return this.execute();
-            });
+            yield promise.allValues(this.activeTasks);
         });
     }
     flush() {

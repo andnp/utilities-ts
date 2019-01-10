@@ -117,7 +117,7 @@ export class Observable<T> {
             const r = sub(data);
             if (r instanceof Observable) return r.bind(obs);
             if (r instanceof Promise) return obs.next(await r);
-            if (Array.isArray(r)) return sendArray(d => obs.queue.push(d), () => obs.execute(), r);
+            if (Array.isArray(r)) return sendArray(d => obs.next(d), () => {/* stub */}, r);
         });
         this.bindEndAndError(obs);
 
@@ -186,8 +186,10 @@ export class Observable<T> {
     private activeTasks: Record<string, Promise<any>> = {};
     private getId = uniqueId();
     private async execute() {
-        const active = Object.keys(this.activeTasks).length;
         const remaining = this.queue.length;
+        if (remaining === 0) return;
+
+        const active = Object.keys(this.activeTasks).length;
         const shouldExecute = this.parallel > 0 ? min(this.parallel - active, remaining) : remaining;
 
         for (let i = 0; i < shouldExecute; ++i) {
@@ -204,14 +206,7 @@ export class Observable<T> {
             });
         }
 
-        await promise.allValues(this.activeTasks)
-            // ensure control loop clears before running again
-            .then(() => promise.delay(5 as Milliseconds))
-            .then(() => {
-                if (this.queue.length === 0) return;
-
-                return this.execute();
-            });
+        await promise.allValues(this.activeTasks);
     }
 
     async flush() {
