@@ -1,6 +1,7 @@
 import * as promise from './promise';
 import { invoke } from './fp';
 import { EventEmitter } from 'events';
+import { Milliseconds } from './time';
 
 export interface RawObservable<T> {
     next(data: T): any;
@@ -59,16 +60,7 @@ export class Observable<T> {
 
     static fromArray<T>(arr: T[]): Observable<T> {
         const obs = Observable.create<T>(creator => {
-            // use setTimeout to release the control loop after each item is processed
-            const send = (i: number) => {
-                if (i >= arr.length) return creator.end();
-
-                creator.next(arr[i]);
-
-                setTimeout(() => send(i + 1), 1);
-            };
-
-            send(0);
+            sendArray(creator.next, creator.end, arr);
         });
 
         return obs;
@@ -207,11 +199,14 @@ export class Observable<T> {
 
             task.then(() => {
                 delete this.activeTasks[id];
-                this.execute();
+                // ensure control loop clears before running again
+                setTimeout(() => this.execute(), 5);
             });
         }
 
         await promise.allValues(this.activeTasks)
+            // ensure control loop clears before running again
+            .then(() => promise.delay(5 as Milliseconds))
             .then(() => {
                 if (this.queue.length === 0) return;
 
@@ -331,6 +326,17 @@ export class Observable<T> {
     }
 }
 
+const sendArray = <T>(next: (t: T) => void, end: () => void, arr: T[]) => {
+    // use setTimeout to release the control loop after each item is processed
+    const send = (i: number) => {
+        if (i >= arr.length) return end();
+        next(arr[i]);
+
+        setTimeout(() => send(i + 1), 5);
+    };
+
+    send(0);
+};
 
 const uniqueId = () => {
     let i = 0;
