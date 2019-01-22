@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 import * as v from 'validtyped';
 import * as rmrf from 'rimraf';
@@ -17,8 +16,8 @@ export const fileExists = promisify(fs.exists);
 export const readdir = promisify(fs.readdir);
 export const removeRecursively = promisify(rmrf);
 export const glob = promisify(globAsync);
+const mkdirp = promisify(fs.mkdir);
 
-const mkdir = promisify(mkdirp);
 
 // ---------------------
 // Observable File Utils
@@ -43,6 +42,22 @@ export const readdirObservable = (loc: string): Observable<string> => {
             creator.end();
         }).catch(e => creator.error(e));
     });
+};
+
+export const mkdir = async (path: string) => {
+    let current = '';
+    for (const piece of path.split('/')) {
+        if (piece === '.') continue;
+        else if (piece === '..') {
+            current = current.split('/').slice(0, -1).join('/');
+        } else {
+            current += piece + '/';
+        }
+        const exists = await fileExists(current);
+        if (exists) continue;
+
+        await mkdirp(current);
+    }
 };
 
 /**

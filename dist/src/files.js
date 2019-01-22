@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
-const mkdirp = require("mkdirp");
 const path = require("path");
 const rmrf = require("rimraf");
 const globAsync = require("glob");
@@ -25,7 +24,7 @@ exports.fileExists = util_1.promisify(fs.exists);
 exports.readdir = util_1.promisify(fs.readdir);
 exports.removeRecursively = util_1.promisify(rmrf);
 exports.glob = util_1.promisify(globAsync);
-const mkdir = util_1.promisify(mkdirp);
+const mkdirp = util_1.promisify(fs.mkdir);
 // ---------------------
 // Observable File Utils
 // ---------------------
@@ -47,6 +46,23 @@ exports.readdirObservable = (loc) => {
         }).catch(e => creator.error(e));
     });
 };
+exports.mkdir = (path) => __awaiter(this, void 0, void 0, function* () {
+    let current = '';
+    for (const piece of path.split('/')) {
+        if (piece === '.')
+            continue;
+        else if (piece === '..') {
+            current = current.split('/').slice(0, -1).join('/');
+        }
+        else {
+            current += piece + '/';
+        }
+        const exists = yield exports.fileExists(current);
+        if (exists)
+            continue;
+        yield mkdirp(current);
+    }
+});
 /**
  * Converts a string containing forward slashes ("/")
  * to a system specific file path. On Unix based systems
@@ -62,7 +78,7 @@ exports.filePath = (location) => {
  * Creates folders for the entire given path if necessary.
  * Same behaviour as mkdir -p
  */
-exports.createFolder = (location) => mkdir(path.dirname(location));
+exports.createFolder = (location) => exports.mkdir(path.dirname(location));
 /**
  * Stringifies an object then writes it to the file location.
  * Creates the folder path if necessary first.
