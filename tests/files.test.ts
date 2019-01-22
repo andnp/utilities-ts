@@ -31,3 +31,17 @@ test('Can make a nested file path', async () => {
 
     await removeRecursively('nested');
 });
+
+test('Can make a nested file path with .. operators', async () => {
+    const path = 'deeply/nested/../file/path';
+
+    const existsAlready = await fileExists(path);
+    if (existsAlready) await removeRecursively('deeply');
+
+    await mkdir(path);
+
+    const exists = await fileExists(path);
+    expect(exists).toBe(true);
+
+    await removeRecursively('deeply');
+});

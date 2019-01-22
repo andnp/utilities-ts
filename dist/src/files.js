@@ -52,7 +52,7 @@ exports.mkdir = (path) => __awaiter(this, void 0, void 0, function* () {
         if (piece === '.')
             continue;
         else if (piece === '..') {
-            current = current.split('/').slice(0, -1).join('/');
+            current = current.split('/').slice(0, -2).join('/') + '/';
         }
         else {
             current += piece + '/';

@@ -49,7 +49,7 @@ export const mkdir = async (path: string) => {
     for (const piece of path.split('/')) {
         if (piece === '.') continue;
         else if (piece === '..') {
-            current = current.split('/').slice(0, -1).join('/');
+            current = current.split('/').slice(0, -2).join('/') + '/';
         } else {
             current += piece + '/';
         }
