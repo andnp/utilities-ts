@@ -1,4 +1,4 @@
-export function interpolate(obj: Record<string, string>, template: string): string {
+export function interpolate(obj: Record<string, string | undefined>, template: string): string {
     const matches = template.match(/{{.+?}}/g);
     if (!matches) return template;
 
