@@ -60,7 +60,7 @@ exports.mkdir = (path) => __awaiter(this, void 0, void 0, function* () {
         const exists = yield exports.fileExists(current);
         if (exists)
             continue;
-        yield mkdirp(current);
+        yield mkdirp(current).catch(() => { });
     }
 });
 /**

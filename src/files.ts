@@ -56,7 +56,7 @@ export const mkdir = async (path: string) => {
         const exists = await fileExists(current);
         if (exists) continue;
 
-        await mkdirp(current);
+        await mkdirp(current).catch(() => { /* stub */});
     }
 };
 
