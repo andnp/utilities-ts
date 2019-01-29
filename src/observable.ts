@@ -140,6 +140,21 @@ export class Observable<T> {
         return this.filter(d => typeof d !== 'undefined') as any as Observable<Exclude<T, undefined>>;
     }
 
+    partition(pred: (x: T) => OrPromise<boolean>): [Observable<T>, Observable<T>] {
+        const left = new Observable<T>();
+        const right = new Observable<T>();
+
+        this.subscribe(async (data) => {
+            const filter = await pred(data);
+            if (filter) left.next(data);
+            else right.next(data);
+        });
+        this.bindEndAndError(left);
+        this.bindEndAndError(right);
+
+        return [left, right];
+    }
+
     // ---------
     // Data Flow
     // ---------

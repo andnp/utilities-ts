@@ -124,6 +124,24 @@ test('Can flatten arrays into stream', async () => {
     expect(out).toEqual(expected);
 });
 
+test('Can split the flow of data streams', async () => {
+    const obs = Observable.fromArray(arrays.range(0, 11));
+
+    const [even, odd] = obs.partition(x => x % 2 === 0);
+
+    let left = 0;
+    let right = 0;
+
+    even.subscribe(() => left++);
+    odd.subscribe(() => right++);
+
+    await even;
+    await odd;
+
+    expect(left).toBe(6);
+    expect(right).toBe(5);
+});
+
 // ----------
 // Aggregates
 // ----------
@@ -153,6 +171,10 @@ test('Can group values into clusters', async () => {
     expect(state).toBe(3);
 });
 
+
+// ----------------
+// Regression Tests
+// ----------------
 test('Can bottleneck slow streams', async () => {
     const obs = Observable.fromArray(arrays.range(0, 100));
 

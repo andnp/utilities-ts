@@ -115,6 +115,20 @@ class Observable {
     filterUndefined() {
         return this.filter(d => typeof d !== 'undefined');
     }
+    partition(pred) {
+        const left = new Observable();
+        const right = new Observable();
+        this.subscribe((data) => __awaiter(this, void 0, void 0, function* () {
+            const filter = yield pred(data);
+            if (filter)
+                left.next(data);
+            else
+                right.next(data);
+        }));
+        this.bindEndAndError(left);
+        this.bindEndAndError(right);
+        return [left, right];
+    }
     // ---------
     // Data Flow
     // ---------
