@@ -152,3 +152,16 @@ test('Can group values into clusters', async () => {
 
     expect(state).toBe(3);
 });
+
+test('Can bottleneck slow streams', async () => {
+    const obs = Observable.fromArray(arrays.range(0, 100));
+
+    let state = 0;
+    await obs
+        .bottleneck(4)
+        .map(i => promise.delay(i * 2 as Milliseconds))
+        .bottleneck(1)
+        .subscribe(() => state++);
+
+    expect(state).toBe(100);
+});

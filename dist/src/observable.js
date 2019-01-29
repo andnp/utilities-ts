@@ -161,15 +161,19 @@ class Observable {
                 return;
             const active = Object.keys(this.activeTasks).length;
             const shouldExecute = this.parallel > 0 ? min(this.parallel - active, remaining) : remaining;
+            // make sure I don't create an infinite loop of empty promises
+            // ^^^ that got awfully existential 0.0
+            if (shouldExecute === 0)
+                return;
             for (let i = 0; i < shouldExecute; ++i) {
                 const id = this.getId();
                 const d = this.queue.shift();
                 const task = promise.map(this.subscriptions, s => s(d));
-                this.activeTasks[id] = task;
-                task.then(() => {
+                this.activeTasks[id] = task.then(() => {
                     delete this.activeTasks[id];
                     // ensure control loop clears before running again
-                    setTimeout(() => this.execute(), 5);
+                    return promise.delay(5)
+                        .then(() => this.execute());
                 });
             }
             yield promise.allValues(this.activeTasks);
