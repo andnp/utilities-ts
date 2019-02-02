@@ -261,6 +261,20 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
             : Matrix.fromMatrix(Matrix.fromData(out).transpose());
     }
 
+    rateOfChange(axis: 0 = 0): Matrix {
+        const out = [] as number[][];
+        let prev = this.getRow(0);
+
+        for (let i = 1; i < this.rows; ++i) {
+            const row = this.getRow(i);
+            const diff = row.map((v, i) => v - prev[i]);
+            out.push(diff);
+            prev = row;
+        }
+
+        return Matrix.fromData(out);
+    }
+
     // ---------
     // Utilities
     // ---------

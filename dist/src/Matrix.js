@@ -229,6 +229,17 @@ class Matrix {
             ? Matrix.fromData(out)
             : Matrix.fromMatrix(Matrix.fromData(out).transpose());
     }
+    rateOfChange(axis = 0) {
+        const out = [];
+        let prev = this.getRow(0);
+        for (let i = 1; i < this.rows; ++i) {
+            const row = this.getRow(i);
+            const diff = row.map((v, i) => v - prev[i]);
+            out.push(diff);
+            prev = row;
+        }
+        return Matrix.fromData(out);
+    }
     // ---------
     // Utilities
     // ---------

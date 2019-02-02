@@ -228,3 +228,20 @@ test('Can get a block average over rows 2', () => {
 
     expect(got.equal(e)).toBe(true);
 });
+
+test('Can calculate a rate of change over rows', () => {
+    const m = Matrix.fromData([
+        [1, 2, 3],
+        [2, 3, 4],
+        [4, 5, 6],
+    ]);
+
+    const e = Matrix.fromData([
+        [1, 1, 1],
+        [2, 2, 2],
+    ]);
+
+    const got = m.rateOfChange();
+
+    expect(got.equal(e)).toBe(true);
+});
