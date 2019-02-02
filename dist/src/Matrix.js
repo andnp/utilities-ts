@@ -229,6 +229,17 @@ class Matrix {
             ? Matrix.fromData(out)
             : Matrix.fromMatrix(Matrix.fromData(out).transpose());
     }
+    movingAverage(window, axis = 0) {
+        const gamma = 2 / (window + 1);
+        const out = [];
+        let mean = this.getRow(0);
+        for (let i = 1; i < this.rows; ++i) {
+            const row = this.getRow(i);
+            mean = mean.map((m, i) => row[i] * gamma + m * (1 - gamma));
+            out.push(mean);
+        }
+        return Matrix.fromData(out);
+    }
     rateOfChange(axis = 0) {
         const out = [];
         let prev = this.getRow(0);

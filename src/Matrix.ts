@@ -261,6 +261,20 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
             : Matrix.fromMatrix(Matrix.fromData(out).transpose());
     }
 
+    movingAverage(window: number, axis: 0 = 0): Matrix {
+        const gamma = 2 / (window + 1);
+        const out = [] as number[][];
+        let mean = this.getRow(0);
+
+        for (let i = 1; i < this.rows; ++i) {
+            const row = this.getRow(i);
+            mean = mean.map((m, i) => row[i] * gamma + m * (1 - gamma));
+            out.push(mean);
+        }
+
+        return Matrix.fromData(out);
+    }
+
     rateOfChange(axis: 0 = 0): Matrix {
         const out = [] as number[][];
         let prev = this.getRow(0);
