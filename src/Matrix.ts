@@ -133,6 +133,7 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
 
     transpose() {
         this.transposed = !this.transposed;
+        return this;
     }
 
     addRow(data: number[]) {
@@ -222,6 +223,42 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
         }
 
         return true;
+    }
+
+    blockAverage(window: number, axis: 0 | 1 = 0): Matrix {
+        const blocks = axis === 0
+            ? Math.ceil(this.rows / window)
+            : Math.ceil(this.cols / window);
+
+        const me = axis === 0
+            ? this.rows
+            : this.cols;
+
+        const other = axis === 0
+            ? this.cols
+            : this.rows;
+
+        const getData = axis === 0
+            ? (i: number) => this.getRow(i)
+            : (i: number) => this.getCol(i);
+
+        const out = [] as number[][];
+        for (let b = 0; b < blocks; b++) {
+            const mean = _.times(other, () => 0);
+            for (let w = 0; w < window; w++) {
+                const idx = b * window + w;
+                if (idx >= me) break;
+
+                const data = getData(idx);
+                for (let i = 0; i < data.length; i++) mean[i] = mean[i] + (data[i] / window);
+            }
+
+            out.push(mean);
+        }
+
+        return axis === 0
+            ? Matrix.fromData(out)
+            : Matrix.fromMatrix(Matrix.fromData(out).transpose());
     }
 
     // ---------

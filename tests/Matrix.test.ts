@@ -184,3 +184,47 @@ test('Can concat multiple matrix rows', () => {
 
     expect(got.equal(e)).toBe(true);
 });
+
+test('Can get a block average over rows', () => {
+    const m = Matrix.fromData([
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+    ]);
+
+    const e = Matrix.fromData([
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+    ]);
+
+    const got = m.blockAverage(3, 0);
+
+    expect(got.equal(e)).toBe(true);
+});
+
+test('Can get a block average over rows 2', () => {
+    const m = Matrix.fromData([
+        [1, 2, 3],
+        [2, 3, 4],
+        [3, 4, 5],
+        [1, 2, 3],
+        [2, 3, 4],
+        [3, 4, 5],
+    ]);
+
+    const e = Matrix.fromData([
+        [2, 3, 4],
+        [2, 3, 4],
+    ]);
+
+    const got = m.blockAverage(3, 0);
+
+    expect(got.equal(e)).toBe(true);
+});
