@@ -415,12 +415,12 @@ export class NumericalObservable extends Observable<number> {
         });
 
         this.onEnd(() => {
-            obs.next(mean / count);
+            if (count) obs.next(mean / count);
             obs.end();
         });
 
         this.onError(e => {
-            obs.next(mean / count);
+            if (count) obs.next(mean / count);
             obs.error(e);
         });
 
