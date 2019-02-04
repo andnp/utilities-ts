@@ -2,6 +2,7 @@ import * as promise from './promise';
 import { invoke } from './fp';
 import { EventEmitter } from 'events';
 import { Milliseconds } from './time';
+import { Writable } from 'stream';
 
 export interface RawObservable<T> {
     next(data: T): any;
@@ -355,6 +356,17 @@ export class Observable<T> {
 
     toNumerical(): NumericalObservable {
         return NumericalObservable.fromObservable(this as any);
+    }
+
+    toWriteStream(stream: Writable) {
+        this.subscribe(d => {
+            stream.write(d);
+        });
+
+        this.onEnd(() => stream.end());
+        this.onError(() => stream.end());
+
+        return this;
     }
 
     dispose() {

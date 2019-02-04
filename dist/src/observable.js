@@ -305,6 +305,14 @@ class Observable {
     toNumerical() {
         return NumericalObservable.fromObservable(this);
     }
+    toWriteStream(stream) {
+        this.subscribe(d => {
+            stream.write(d);
+        });
+        this.onEnd(() => stream.end());
+        this.onError(() => stream.end());
+        return this;
+    }
     dispose() {
         if (!(this.completed || this.err))
             this.end();
