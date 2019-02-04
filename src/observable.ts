@@ -76,6 +76,19 @@ export class Observable<T> {
         return obs;
     }
 
+    static fromCreator<T>() {
+        const obs = new Observable<T>();
+
+        return {
+            observable: obs,
+            creator: {
+                next: (d: T) => obs.next(d),
+                end: () => obs.end(),
+                error: (e: Error | string) => obs.error(e),
+            },
+        };
+    }
+
     // -------------
     // Subscriptions
     // -------------
@@ -310,6 +323,18 @@ export class Observable<T> {
         return obs;
     }
 
+    last(): Promise<T> {
+        let last: T | undefined;
+
+        this.subscribe(d => last = d);
+
+        return this.then(() => {
+            if (!last) throw new Error('Never observed any data so no last item found');
+
+            return last;
+        });
+    }
+
     bottleneck(num: number): Observable<T> {
         this.parallel = num;
         return this;
@@ -328,6 +353,10 @@ export class Observable<T> {
         this.subscribe(d => obs.next(d));
     }
 
+    toNumerical(): NumericalObservable {
+        return NumericalObservable.fromObservable(this as any);
+    }
+
     dispose() {
         if (!(this.completed || this.err)) this.end();
 
@@ -336,6 +365,91 @@ export class Observable<T> {
         this.errorHandlers = [];
         this.endHandlers = [];
         this.subscriptions = [];
+    }
+}
+
+export class NumericalObservable extends Observable<number> {
+    static fromObservable(obs: Observable<number>): NumericalObservable {
+        const num = new NumericalObservable();
+
+        obs.subscribe(d => {
+            if (typeof d !== 'number') {
+                num.error(new Error('Expected to only receive numerical data'));
+                return;
+            }
+
+            num.next(d);
+        });
+
+        obs.onError(e => num.error(e));
+        obs.onEnd(() => num.end());
+
+        return num;
+    }
+
+    blockAverage(window: number): NumericalObservable {
+        const obs = new NumericalObservable();
+
+        let mean = 0;
+        let count = 0;
+
+        this.subscribe((x) => {
+            mean += x;
+            count++;
+
+            if (count === window) {
+                obs.next(mean / count);
+
+                mean = 0;
+                count = 0;
+            }
+        });
+
+        this.onEnd(() => {
+            obs.next(mean / count);
+            obs.end();
+        });
+
+        this.onError(e => {
+            obs.next(mean / count);
+            obs.error(e);
+        });
+
+        return obs;
+    }
+
+    movingAverage(window: number): NumericalObservable {
+        const obs = new NumericalObservable();
+
+        const gamma = 2 / (window + 1);
+        let mean: number | undefined;
+
+        this.subscribe(x => {
+            // if mean is undefined, start it out as x
+            mean = mean === undefined ? x : mean;
+
+            mean = gamma * x + (1 - gamma) * mean;
+            obs.next(mean);
+        });
+
+        this.bindEndAndError(obs);
+
+        return obs;
+    }
+
+    sum(): NumericalObservable {
+        const obs = new NumericalObservable();
+
+        let sum = 0;
+
+        this.subscribe(x => {
+            sum += x;
+            obs.next(sum);
+        });
+
+        this.bindEndAndError(obs);
+
+        return obs;
     }
 }
 

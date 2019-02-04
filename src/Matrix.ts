@@ -266,6 +266,10 @@ export class Matrix<B extends BufferConstructor = Float32ArrayConstructor> {
         const out = [] as number[][];
         let mean = this.getRow(0);
 
+        // include the first row in the output
+        // makes sure input and output matrices are the same size
+        out.push(mean);
+
         for (let i = 1; i < this.rows; ++i) {
             const row = this.getRow(i);
             mean = mean.map((m, i) => row[i] * gamma + m * (1 - gamma));
