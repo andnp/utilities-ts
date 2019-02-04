@@ -309,8 +309,6 @@ class Observable {
         this.subscribe(d => {
             stream.write(d);
         });
-        this.onEnd(() => stream.end());
-        this.onError(() => stream.end());
         return this;
     }
     dispose() {

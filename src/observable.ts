@@ -363,9 +363,6 @@ export class Observable<T> {
             stream.write(d);
         });
 
-        this.onEnd(() => stream.end());
-        this.onError(() => stream.end());
-
         return this;
     }
 
