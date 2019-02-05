@@ -22,7 +22,7 @@ export class Observable<T> {
     // -----
     // State
     // -----
-    protected completed = false;
+    protected completed: Promise<void> | undefined;
     protected err: Error | string | undefined;
     protected queue: T[] = [];
     protected parallel: number = 0;
@@ -179,21 +179,22 @@ export class Observable<T> {
     }
 
     protected end() {
-        if (this.completed || this.err) return;
-        this.completed = true;
-        this.flush().then(() => {
-            this.endHandlers.forEach(invoke);
-            this.dispose();
-        });
+        if (this.completed) return this.completed;
+        this.completed = this.flush()
+            .then(() => promise.map(this.endHandlers, invoke))
+            .then(() => this.dispose());
+
+        return this.completed;
     }
 
     protected error(e: Error | string) {
-        if (this.completed || this.err) return;
+        if (this.completed) return this.completed;
         this.err = e;
-        this.flush().then(() => {
-            this.errorHandlers.forEach(f => f(e));
-            this.dispose();
-        });
+        this.completed = this.flush()
+            .then(() => promise.map(this.errorHandlers, f => f(e)))
+            .then(() => this.dispose());
+
+        return this.completed;
     }
 
     // -----
@@ -209,7 +210,9 @@ export class Observable<T> {
         return new Promise((resolve, reject) => {
             this.onEnd(resolve);
             this.onError(reject);
-        }).then(f);
+        })
+            .then(() => this.end())
+            .then(f);
     }
 
     private activeTasks: Record<string, Promise<any>> = {};
@@ -363,6 +366,7 @@ export class Observable<T> {
             stream.write(d);
         });
 
+        this.onEnd(() => new Promise(resolve => stream.end(resolve)));
         return this;
     }
 

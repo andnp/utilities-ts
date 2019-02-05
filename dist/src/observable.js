@@ -12,10 +12,6 @@ const promise = require("./promise");
 const fp_1 = require("./fp");
 class Observable {
     constructor() {
-        // -----
-        // State
-        // -----
-        this.completed = false;
         this.queue = [];
         this.parallel = 0;
         // -------------
@@ -150,22 +146,21 @@ class Observable {
         this.execute();
     }
     end() {
-        if (this.completed || this.err)
-            return;
-        this.completed = true;
-        this.flush().then(() => {
-            this.endHandlers.forEach(fp_1.invoke);
-            this.dispose();
-        });
+        if (this.completed)
+            return this.completed;
+        this.completed = this.flush()
+            .then(() => promise.map(this.endHandlers, fp_1.invoke))
+            .then(() => this.dispose());
+        return this.completed;
     }
     error(e) {
-        if (this.completed || this.err)
-            return;
+        if (this.completed)
+            return this.completed;
         this.err = e;
-        this.flush().then(() => {
-            this.errorHandlers.forEach(f => f(e));
-            this.dispose();
-        });
+        this.completed = this.flush()
+            .then(() => promise.map(this.errorHandlers, f => f(e)))
+            .then(() => this.dispose());
+        return this.completed;
     }
     then(f) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -176,7 +171,9 @@ class Observable {
             return new Promise((resolve, reject) => {
                 this.onEnd(resolve);
                 this.onError(reject);
-            }).then(f);
+            })
+                .then(() => this.end())
+                .then(f);
         });
     }
     execute() {
@@ -309,6 +306,7 @@ class Observable {
         this.subscribe(d => {
             stream.write(d);
         });
+        this.onEnd(() => new Promise(resolve => stream.end(resolve)));
         return this;
     }
     dispose() {
