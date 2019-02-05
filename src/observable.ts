@@ -129,7 +129,7 @@ export class Observable<T> {
 
         this.subscribe(async (data) => {
             const r = sub(data);
-            if (r instanceof Observable) return r.bind(obs);
+            if (r instanceof Observable) return r.subscribe(d => obs.next(d));
             if (r instanceof Promise) return obs.next(await r);
             if (Array.isArray(r)) return sendArray(d => obs.next(d), () => {/* stub */}, r);
         });

@@ -187,3 +187,14 @@ test('Can bottleneck slow streams', async () => {
 
     expect(state).toBe(100);
 });
+
+test('Can flatten an observable into another observable', async () => {
+    const obs = Observable.fromArray(arrays.range(1, 3));
+
+    const got = await obs
+        .flatMap(i => Observable.fromArray(arrays.range(0, i)))
+        .collect();
+
+    const expected = [0, 0, 1];
+    expect(got).toEqual(expected);
+});

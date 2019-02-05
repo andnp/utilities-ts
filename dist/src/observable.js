@@ -100,7 +100,7 @@ class Observable {
         this.subscribe((data) => __awaiter(this, void 0, void 0, function* () {
             const r = sub(data);
             if (r instanceof Observable)
-                return r.bind(obs);
+                return r.subscribe(d => obs.next(d));
             if (r instanceof Promise)
                 return obs.next(yield r);
             if (Array.isArray(r))
