@@ -382,6 +382,19 @@ class NumericalObservable extends Observable {
         this.bindEndAndError(obs);
         return obs;
     }
+    mean() {
+        let sum = 0;
+        let count = 0;
+        this.subscribe(x => {
+            sum += x;
+            count++;
+        });
+        return this.then(() => {
+            if (count === 0)
+                throw new Error('Cannot take mean without any data');
+            return sum / count;
+        });
+    }
 }
 exports.NumericalObservable = NumericalObservable;
 const sendArray = (next, end, arr) => {

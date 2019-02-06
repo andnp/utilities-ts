@@ -54,3 +54,12 @@ test('Can compute the total sum of a stream', async () => {
 
     expect(outcome).toBe(21);
 });
+
+test('Can take the mean of a stream', async () => {
+    const mean = await Observable
+        .fromArray([0, 1, 2, 3, 4, 5])
+        .toNumerical()
+        .mean();
+
+    expect(mean).toBe(2.5);
+});

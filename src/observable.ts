@@ -464,6 +464,20 @@ export class NumericalObservable extends Observable<number> {
 
         return obs;
     }
+
+    mean(): Promise<number> {
+        let sum = 0;
+        let count = 0;
+        this.subscribe(x => {
+            sum += x;
+            count++;
+        });
+
+        return this.then(() => {
+            if (count === 0) throw new Error('Cannot take mean without any data');
+            return sum / count;
+        });
+    }
 }
 
 const sendArray = <T>(next: (t: T) => void, end: () => void, arr: T[]) => {
