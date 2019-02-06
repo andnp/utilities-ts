@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const path = require("path");
@@ -46,7 +38,7 @@ exports.readdirObservable = (loc) => {
         }).catch(e => creator.error(e));
     });
 };
-exports.mkdir = (path) => __awaiter(this, void 0, void 0, function* () {
+exports.mkdir = async (path) => {
     let current = '';
     for (const piece of path.split('/')) {
         if (piece === '.')
@@ -57,12 +49,12 @@ exports.mkdir = (path) => __awaiter(this, void 0, void 0, function* () {
         else {
             current += piece + '/';
         }
-        const exists = yield exports.fileExists(current);
+        const exists = await exports.fileExists(current);
         if (exists)
             continue;
-        yield mkdirp(current).catch(() => { });
+        await mkdirp(current).catch(() => { });
     }
-});
+};
 /**
  * Converts a string containing forward slashes ("/")
  * to a system specific file path. On Unix based systems
@@ -91,15 +83,13 @@ exports.writeJson = writeJson;
  * Reads a json file from a given path.
  * Validates that file's integrity against the given schema.
  */
-function readJson(location, schema) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const rawData = yield exports.readFile(location);
-        const data = JSON.parse(rawData.toString());
-        const validated = schema.validate(data);
-        if (!validated.valid)
-            throw new Error(`Expected data to match schema. <${JSON.stringify(validated.errors, undefined, 2)}>`);
-        return validated.data;
-    });
+async function readJson(location, schema) {
+    const rawData = await exports.readFile(location);
+    const data = JSON.parse(rawData.toString());
+    const validated = schema.validate(data);
+    if (!validated.valid)
+        throw new Error(`Expected data to match schema. <${JSON.stringify(validated.errors, undefined, 2)}>`);
+    return validated.data;
 }
 exports.readJson = readJson;
 //# sourceMappingURL=files.js.map

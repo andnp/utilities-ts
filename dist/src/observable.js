@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const promise = require("./promise");
 const fp_1 = require("./fp");
@@ -88,34 +80,34 @@ class Observable {
     // ---------------------
     map(sub) {
         const obs = new Observable();
-        this.subscribe((data) => __awaiter(this, void 0, void 0, function* () {
-            const r = yield sub(data);
+        this.subscribe(async (data) => {
+            const r = await sub(data);
             obs.next(r);
-        }));
+        });
         this.bindEndAndError(obs);
         return obs;
     }
     flatMap(sub) {
         const obs = new Observable();
-        this.subscribe((data) => __awaiter(this, void 0, void 0, function* () {
+        this.subscribe(async (data) => {
             const r = sub(data);
             if (r instanceof Observable)
                 return r.subscribe(d => obs.next(d));
             if (r instanceof Promise)
-                return obs.next(yield r);
+                return obs.next(await r);
             if (Array.isArray(r))
                 return sendArray(d => obs.next(d), () => { }, r);
-        }));
+        });
         this.bindEndAndError(obs);
         return obs;
     }
     filter(test) {
         const obs = new Observable();
-        this.subscribe((data) => __awaiter(this, void 0, void 0, function* () {
-            const filter = yield test(data);
+        this.subscribe(async (data) => {
+            const filter = await test(data);
             if (filter)
                 obs.next(data);
-        }));
+        });
         this.bindEndAndError(obs);
         return obs;
     }
@@ -125,13 +117,13 @@ class Observable {
     partition(pred) {
         const left = new Observable();
         const right = new Observable();
-        this.subscribe((data) => __awaiter(this, void 0, void 0, function* () {
-            const filter = yield pred(data);
+        this.subscribe(async (data) => {
+            const filter = await pred(data);
             if (filter)
                 left.next(data);
             else
                 right.next(data);
-        }));
+        });
         this.bindEndAndError(left);
         this.bindEndAndError(right);
         return [left, right];
@@ -162,63 +154,55 @@ class Observable {
             .then(() => this.dispose());
         return this.completed;
     }
-    then(f) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // if this observable is already done, just return
-            if (this.completed || this.err)
-                return f && f();
-            // otherwise, return once the `end` or `error` function is called
-            return new Promise((resolve, reject) => {
-                this.onEnd(resolve);
-                this.onError(reject);
-            })
-                .then(() => this.end())
-                .then(f);
-        });
+    async then(f) {
+        // if this observable is already done, just return
+        if (this.completed || this.err)
+            return f && f();
+        // otherwise, return once the `end` or `error` function is called
+        return new Promise((resolve, reject) => {
+            this.onEnd(resolve);
+            this.onError(reject);
+        })
+            .then(() => this.end())
+            .then(f);
     }
-    execute() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const remaining = this.queue.length;
-            if (remaining === 0)
-                return;
-            const active = Object.keys(this.activeTasks).length;
-            const shouldExecute = this.parallel > 0 ? min(this.parallel - active, remaining) : remaining;
-            // make sure I don't create an infinite loop of empty promises
-            // ^^^ that got awfully existential 0.0
-            if (shouldExecute === 0)
-                return;
-            for (let i = 0; i < shouldExecute; ++i) {
-                const id = this.getId();
-                const task = Promise.resolve(this.queue.shift())
-                    .then(d => promise.map(this.subscriptions, s => s(d)));
-                this.activeTasks[id] = task.then(() => {
-                    delete this.activeTasks[id];
-                    // ensure control loop clears before running again
-                    return promise.delay(5)
-                        .then(() => this.execute());
-                });
-            }
-            yield promise.allValues(this.activeTasks);
-        });
+    async execute() {
+        const remaining = this.queue.length;
+        if (remaining === 0)
+            return;
+        const active = Object.keys(this.activeTasks).length;
+        const shouldExecute = this.parallel > 0 ? min(this.parallel - active, remaining) : remaining;
+        // make sure I don't create an infinite loop of empty promises
+        // ^^^ that got awfully existential 0.0
+        if (shouldExecute === 0)
+            return;
+        for (let i = 0; i < shouldExecute; ++i) {
+            const id = this.getId();
+            const task = Promise.resolve(this.queue.shift())
+                .then(d => promise.map(this.subscriptions, s => s(d)));
+            this.activeTasks[id] = task.then(() => {
+                delete this.activeTasks[id];
+                // ensure control loop clears before running again
+                return promise.delay(5)
+                    .then(() => this.execute());
+            });
+        }
+        await promise.allValues(this.activeTasks);
     }
-    flush() {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.execute();
-            yield promise.allValues(this.activeTasks);
-            this.queue = [];
-        });
+    async flush() {
+        await this.execute();
+        await promise.allValues(this.activeTasks);
+        this.queue = [];
     }
     // ------------------
     // Advanced Functions
     // ------------------
-    collect() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.completed || this.err)
-                return [];
-            const collection = [];
-            this.subscribe(d => collection.push(d));
-            return this.then(() => collection);
-        });
+    async collect() {
+        if (this.completed || this.err)
+            return [];
+        const collection = [];
+        this.subscribe(d => collection.push(d));
+        return this.then(() => collection);
     }
     group(num) {
         const obs = new Observable();
