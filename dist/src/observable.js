@@ -279,7 +279,7 @@ class Observable {
         let last;
         this.subscribe(d => last = d);
         return this.then(() => {
-            if (!last)
+            if (last === undefined)
                 throw new Error('Never observed any data so no last item found');
             return last;
         });
