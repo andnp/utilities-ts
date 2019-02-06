@@ -189,8 +189,8 @@ class Observable {
                 return;
             for (let i = 0; i < shouldExecute; ++i) {
                 const id = this.getId();
-                const d = this.queue.shift();
-                const task = promise.map(this.subscriptions, s => s(d));
+                const task = Promise.resolve(this.queue.shift())
+                    .then(d => promise.map(this.subscriptions, s => s(d)));
                 this.activeTasks[id] = task.then(() => {
                     delete this.activeTasks[id];
                     // ensure control loop clears before running again

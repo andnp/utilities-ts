@@ -5,7 +5,7 @@ import { Milliseconds } from './time';
 import { Writable } from 'stream';
 
 export interface RawObservable<T> {
-    next(data: T): any;
+    next(data: OrPromise<T>): any;
     end(): any;
     error(e: Error | string): any;
 }
@@ -24,7 +24,7 @@ export class Observable<T> {
     // -----
     protected completed: Promise<void> | undefined;
     protected err: Error | string | undefined;
-    protected queue: T[] = [];
+    protected queue: Array<OrPromise<T>> = [];
     protected parallel: number = 0;
 
     // --------
@@ -83,7 +83,7 @@ export class Observable<T> {
         return {
             observable: obs,
             creator: {
-                next: (d: T) => obs.next(d),
+                next: (d: OrPromise<T>) => obs.next(d),
                 end: () => obs.end(),
                 error: (e: Error | string) => obs.error(e),
             },
@@ -172,7 +172,7 @@ export class Observable<T> {
     // ---------
     // Data Flow
     // ---------
-    protected next(data: T) {
+    protected next(data: OrPromise<T>) {
         if (this.completed || this.err) return;
         this.queue.push(data);
         this.execute();
@@ -230,9 +230,9 @@ export class Observable<T> {
 
         for (let i = 0; i < shouldExecute; ++i) {
             const id = this.getId();
-            const d = this.queue.shift()!;
+            const task = Promise.resolve(this.queue.shift()!)
+                .then(d => promise.map(this.subscriptions, s => s(d)));
 
-            const task = promise.map(this.subscriptions, s => s(d));
             this.activeTasks[id] = task.then(() => {
                 delete this.activeTasks[id];
                 // ensure control loop clears before running again

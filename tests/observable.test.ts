@@ -24,6 +24,21 @@ test('Can create observable from list of promises', async () => {
     expect(state).toBe(4);
 });
 
+// ------------
+// Data Feeding
+// ------------
+test('Can feed promises as data', async () => {
+    const obs = Observable.create(creator => {
+        creator.next(promise.delay(10 as Milliseconds).then(() => 2));
+        creator.next(promise.delay(15 as Milliseconds).then(() => 3));
+        creator.end();
+    });
+
+    const got = await obs.collect();
+
+    expect(got).toEqual([2, 3]);
+});
+
 // -------------
 // Subscriptions
 // -------------
