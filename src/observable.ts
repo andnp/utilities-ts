@@ -174,6 +174,7 @@ export class Observable<T> {
     // ---------
     protected next(data: OrPromise<T>) {
         if (this.completed || this.err) return;
+        if (this.subscriptions.length === 0) return;
         this.queue.push(data);
         this.execute();
     }
@@ -221,24 +222,29 @@ export class Observable<T> {
         const remaining = this.queue.length;
         if (remaining === 0) return;
 
-        const active = Object.keys(this.activeTasks).length;
-        const shouldExecute = this.parallel > 0 ? min(this.parallel - active, remaining) : remaining;
+        const shouldExecute = this.parallel === 0
+            ? remaining
+            : min(this.parallel - Object.keys(this.activeTasks).length, remaining);
 
         // make sure I don't create an infinite loop of empty promises
         // ^^^ that got awfully existential 0.0
         if (shouldExecute === 0) return;
 
         for (let i = 0; i < shouldExecute; ++i) {
-            const id = this.getId();
-            const task = Promise.resolve(this.queue.shift()!)
-                .then(d => promise.map(this.subscriptions, s => s(d)));
+            // no matter what, remove data from the queue
+            const data = this.queue.shift()!;
+            // if there is nothing to do with the data, just move along
+            if (this.subscriptions.length === 0) break;
 
-            this.activeTasks[id] = task.then(() => {
-                delete this.activeTasks[id];
-                // ensure control loop clears before running again
-                return promise.delay(5 as Milliseconds)
-                    .then(() => this.execute());
-            });
+            const id = this.getId();
+            this.activeTasks[id] = Promise.resolve(data)
+                .then(d => promise.map(this.subscriptions, s => s(d)))
+                .then(() => {
+                    delete this.activeTasks[id];
+                    // ensure control loop clears before running again
+                    return promise.delay(2 as Milliseconds)
+                        .then(() => this.execute());
+                });
         }
 
         await promise.allValues(this.activeTasks);
@@ -246,6 +252,8 @@ export class Observable<T> {
 
     async flush() {
         await this.execute();
+        // check if there are any remaining tasks
+        // execute may short-circuit and is not guaranteed to perform this check
         await promise.allValues(this.activeTasks);
         this.queue = [];
     }
