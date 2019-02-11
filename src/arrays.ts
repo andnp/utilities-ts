@@ -39,3 +39,14 @@ export const range = (_minMax: number, _max?: number) => {
 
     return ret;
 };
+
+export const flatMap = <T>(arr: T[], f: (x: T) => T | T[]): T[] => {
+    const out = [] as T[];
+    for (const x of arr) {
+        const got = f(x);
+        if (Array.isArray(got)) got.forEach(e => out.push(e));
+        else out.push(got);
+    }
+
+    return out;
+};

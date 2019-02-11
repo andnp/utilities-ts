@@ -38,4 +38,15 @@ exports.range = (_minMax, _max) => {
         ret.push(i);
     return ret;
 };
+exports.flatMap = (arr, f) => {
+    const out = [];
+    for (const x of arr) {
+        const got = f(x);
+        if (Array.isArray(got))
+            got.forEach(e => out.push(e));
+        else
+            out.push(got);
+    }
+    return out;
+};
 //# sourceMappingURL=arrays.js.map
