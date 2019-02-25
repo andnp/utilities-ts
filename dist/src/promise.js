@@ -28,4 +28,15 @@ exports.allValues = (obj) => {
 exports.map = (arr, f) => {
     return Promise.all(arr.map(f));
 };
+exports.reduce = async (arr, f, initial) => {
+    let coll = initial || arr[0];
+    const start = initial
+        ? 0
+        : 1;
+    for (let i = start; i < arr.length; i++) {
+        const x = arr[i];
+        coll = await f(coll, x);
+    }
+    return coll;
+};
 //# sourceMappingURL=promise.js.map
