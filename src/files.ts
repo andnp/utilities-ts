@@ -14,10 +14,11 @@ export const writeFile = (location: string, data: any) => createFolder(location)
 export const readFile = promisify(fs.readFile);
 export const fileExists = promisify(fs.exists);
 export const readdir = promisify(fs.readdir);
-export const removeRecursively = promisify(rmrf);
 export const glob = promisify(globAsync);
 const mkdirp = promisify(fs.mkdir);
 
+export type RimRaf = (path: string, callback: any) => void;
+export const removeRecursively = promisify(rmrf as any as RimRaf);
 
 // ---------------------
 // Observable File Utils
