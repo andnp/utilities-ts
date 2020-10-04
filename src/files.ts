@@ -14,8 +14,10 @@ export const writeFile = (location: string, data: any) => createFolder(location)
 export const readFile = promisify(fs.readFile);
 export const fileExists = promisify(fs.exists);
 export const readdir = promisify(fs.readdir);
-export const glob = promisify(globAsync);
 const mkdirp = promisify(fs.mkdir);
+
+export type Glob = (pattern: string, callback: any) => string[];
+export const glob = promisify(globAsync as any as Glob);
 
 export type RimRaf = (path: string, callback: any) => void;
 export const removeRecursively = promisify(rmrf as any as RimRaf);
